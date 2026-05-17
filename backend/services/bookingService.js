@@ -71,6 +71,23 @@ function toMoney(value, fallback = null) {
   return Math.round(n * 100) / 100;
 }
 
+function sanitizeGiftDetails(value) {
+  if (!value || typeof value !== 'object') return null;
+  const clean = {};
+  const pickText = (key, max = 240) => {
+    const raw = value[key];
+    if (raw === undefined || raw === null) return;
+    const text = String(raw).trim();
+    if (text) clean[key] = text.slice(0, max);
+  };
+  pickText('recipient_name', 120);
+  pickText('recipient_phone', 40);
+  pickText('instructions', 500);
+  pickText('voucher_code', 80);
+  if (!Object.keys(clean).length) return null;
+  return { is_gift: true, ...clean };
+}
+
 function buildPricingSnapshot(data = {}) {
   const serviceUnitPrice = toMoney(data.serviceUnitPrice ?? data.service_unit_price ?? data.selected_service_price ?? data.price, 0);
   const serviceTotal = toMoney(data.serviceTotal ?? data.service_total, serviceUnitPrice);
@@ -230,41 +247,53 @@ async function createBooking(data) {
   }
 
   const pricing = buildPricingSnapshot({ ...data, serviceId });
+  const giftDetails = sanitizeGiftDetails(data.giftDetails || data.gift_details);
+
+  const columns = [
+    'id', 'customer_id', 'service_id', 'location_type', 'booking_date', 'start_time', 'end_time', 'location_id', 'therapist_id', 'status', 'payment_status', 'created_at',
+    'service_price_option_id', 'service_option_label', 'service_unit_price', 'service_total', 'delivery_fee', 'delivery_km', 'delivery_quote_method', 'delivery_tariff_basis',
+    'discount_percent', 'discount_amount', 'final_total', 'pricing_snapshot', 'package_customer_id', 'package_redemption_status', 'package_pricing_source',
+  ];
+  const valuesSql = [
+    'gen_random_uuid()', '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', "'pending'", "'unpaid'", 'NOW()',
+    '$9', '$10', '$11', '$12', '$13', '$14', '$15', '$16::jsonb', '$17', '$18', '$19', '$20::jsonb', '$21', '$22', '$23',
+  ];
+  const params = [
+    customerId,
+    serviceId    || null,
+    locationType,
+    bookingDate  || null,
+    startTime    || null,
+    endTime      || null,
+    locationId   || null,
+    therapistId  || null,
+    pricing.servicePriceOptionId,
+    pricing.serviceOptionLabel,
+    pricing.serviceUnitPrice,
+    pricing.serviceTotal,
+    pricing.deliveryFee,
+    pricing.deliveryKm,
+    pricing.deliveryQuoteMethod,
+    JSON.stringify(pricing.deliveryTariffBasis || {}),
+    pricing.discountPercent,
+    pricing.discountAmount,
+    pricing.finalTotal,
+    JSON.stringify(pricing.pricingSnapshot || {}),
+    pricing.packageCustomerId,
+    pricing.packageRedemptionStatus,
+    pricing.packagePricingSource,
+  ];
+  if (giftDetails) {
+    columns.push('gift_details');
+    params.push(JSON.stringify(giftDetails));
+    valuesSql.push(`$${params.length}::jsonb`);
+  }
 
   const result = await pool.query(
-    `INSERT INTO bookings
-       (id, customer_id, service_id, location_type, booking_date, start_time, end_time, location_id, therapist_id, status, payment_status, created_at,
-        service_price_option_id, service_option_label, service_unit_price, service_total, delivery_fee, delivery_km, delivery_quote_method, delivery_tariff_basis,
-        discount_percent, discount_amount, final_total, pricing_snapshot, package_customer_id, package_redemption_status, package_pricing_source)
-     VALUES
-       (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, 'pending', 'unpaid', NOW(),
-        $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20::jsonb, $21, $22, $23)
+    `INSERT INTO bookings (${columns.join(', ')})
+     VALUES (${valuesSql.join(', ')})
      RETURNING *`,
-    [
-      customerId,
-      serviceId    || null,
-      locationType,
-      bookingDate  || null,
-      startTime    || null,
-      endTime      || null,
-      locationId   || null,
-      therapistId  || null,
-      pricing.servicePriceOptionId,
-      pricing.serviceOptionLabel,
-      pricing.serviceUnitPrice,
-      pricing.serviceTotal,
-      pricing.deliveryFee,
-      pricing.deliveryKm,
-      pricing.deliveryQuoteMethod,
-      JSON.stringify(pricing.deliveryTariffBasis || {}),
-      pricing.discountPercent,
-      pricing.discountAmount,
-      pricing.finalTotal,
-      JSON.stringify(pricing.pricingSnapshot || {}),
-      pricing.packageCustomerId,
-      pricing.packageRedemptionStatus,
-      pricing.packagePricingSource,
-    ]
+    params
   );
   return result.rows[0];
 }
@@ -282,7 +311,7 @@ async function saveCalendarEventId(bookingId, eventId) {
 // Prevents the race condition where two customers both pass revalidateTherapist
 // and then both write a booking to the same slot.
 // Throws with err.code === 'SLOT_CONFLICT' or 'DISTRICT_CONFLICT' on failure.
-async function confirmBookingAtomic({ customerId, serviceId, locationType, rawDate, rawTime, locationId, therapistId, district, pricingSnapshot = {} }) {
+async function confirmBookingAtomic({ customerId, serviceId, locationType, rawDate, rawTime, locationId, therapistId, district, pricingSnapshot = {}, giftDetails = null }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -337,33 +366,45 @@ async function confirmBookingAtomic({ customerId, serviceId, locationType, rawDa
 
     // Insert booking with immutable pricing snapshot from the confirmed session state.
     const pricing = buildPricingSnapshot({ ...pricingSnapshot, serviceId });
+    const cleanGiftDetails = sanitizeGiftDetails(giftDetails);
+    const columns = [
+      'id', 'customer_id', 'service_id', 'location_type', 'booking_date', 'start_time', 'end_time', 'location_id', 'therapist_id', 'status', 'payment_status', 'created_at',
+      'service_price_option_id', 'service_option_label', 'service_unit_price', 'service_total', 'delivery_fee', 'delivery_km', 'delivery_quote_method', 'delivery_tariff_basis',
+      'discount_percent', 'discount_amount', 'final_total', 'pricing_snapshot', 'package_customer_id', 'package_redemption_status', 'package_pricing_source',
+    ];
+    const valuesSql = [
+      'gen_random_uuid()', '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', "'pending'", "'unpaid'", 'NOW()',
+      '$9', '$10', '$11', '$12', '$13', '$14', '$15', '$16::jsonb', '$17', '$18', '$19', '$20::jsonb', '$21', '$22', '$23',
+    ];
+    const params = [
+      customerId, serviceId || null, locationType, bookingDate, startTime, endTime || null, locationId || null, therapistId || null,
+      pricing.servicePriceOptionId,
+      pricing.serviceOptionLabel,
+      pricing.serviceUnitPrice,
+      pricing.serviceTotal,
+      pricing.deliveryFee,
+      pricing.deliveryKm,
+      pricing.deliveryQuoteMethod,
+      JSON.stringify(pricing.deliveryTariffBasis || {}),
+      pricing.discountPercent,
+      pricing.discountAmount,
+      pricing.finalTotal,
+      JSON.stringify(pricing.pricingSnapshot || {}),
+      pricing.packageCustomerId,
+      pricing.packageRedemptionStatus,
+      pricing.packagePricingSource,
+    ];
+    if (cleanGiftDetails) {
+      columns.push('gift_details');
+      params.push(JSON.stringify(cleanGiftDetails));
+      valuesSql.push(`$${params.length}::jsonb`);
+    }
+
     const result = await client.query(
-      `INSERT INTO bookings
-         (id, customer_id, service_id, location_type, booking_date, start_time, end_time, location_id, therapist_id, status, payment_status, created_at,
-          service_price_option_id, service_option_label, service_unit_price, service_total, delivery_fee, delivery_km, delivery_quote_method, delivery_tariff_basis,
-          discount_percent, discount_amount, final_total, pricing_snapshot, package_customer_id, package_redemption_status, package_pricing_source)
-       VALUES
-         (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, 'pending', 'unpaid', NOW(),
-          $9, $10, $11, $12, $13, $14, $15, $16::jsonb, $17, $18, $19, $20::jsonb, $21, $22, $23)
+      `INSERT INTO bookings (${columns.join(', ')})
+       VALUES (${valuesSql.join(', ')})
        RETURNING *`,
-      [
-        customerId, serviceId || null, locationType, bookingDate, startTime, endTime || null, locationId || null, therapistId || null,
-        pricing.servicePriceOptionId,
-        pricing.serviceOptionLabel,
-        pricing.serviceUnitPrice,
-        pricing.serviceTotal,
-        pricing.deliveryFee,
-        pricing.deliveryKm,
-        pricing.deliveryQuoteMethod,
-        JSON.stringify(pricing.deliveryTariffBasis || {}),
-        pricing.discountPercent,
-        pricing.discountAmount,
-        pricing.finalTotal,
-        JSON.stringify(pricing.pricingSnapshot || {}),
-        pricing.packageCustomerId,
-        pricing.packageRedemptionStatus,
-        pricing.packagePricingSource,
-      ]
+      params
     );
 
     if (pricing.packageCustomerId) {

@@ -13,6 +13,7 @@ const adminGreetingRoute    = require('./routes/adminGreeting');
 const adminSystemPromptRoute = require('./routes/adminSystemPrompt');
 const adminBotMessagesRoute  = require('./routes/adminBotMessages');
 const { startDriverScheduler, startTherapistScheduler } = require('./services/driverService');
+const { startWorkerReminderScheduler } = require('./services/workerReminderService');
 
 const app = express();
 app.use(express.json());
@@ -33,4 +34,5 @@ app.listen(PORT, async () => {
   await connectDB();
   startDriverScheduler();
   startTherapistScheduler();
+  await startWorkerReminderScheduler();
 });

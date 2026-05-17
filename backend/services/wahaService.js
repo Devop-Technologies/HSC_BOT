@@ -53,8 +53,14 @@ async function sendMessage(chatId, text) {
   return wahaApi('/api/sendText', 'POST', { session: SESSION, chatId, text });
 }
 
+async function forwardMessage(chatId, messageId) {
+  if (!chatId) throw new Error('chatId is required');
+  if (!messageId) throw new Error('messageId is required');
+  return wahaApi('/api/forwardMessage', 'POST', { session: SESSION, chatId, messageId });
+}
+
 async function sendLocation(chatId, latitude, longitude, address) {
   return wahaApi('/api/sendLocation', 'POST', { session: SESSION, chatId, latitude, longitude, address });
 }
 
-module.exports = { markSeen, startTyping, stopTyping, sendMessage, sendLocation, resolveContactPhone };
+module.exports = { markSeen, startTyping, stopTyping, sendMessage, forwardMessage, sendLocation, resolveContactPhone };

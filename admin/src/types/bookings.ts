@@ -27,6 +27,10 @@ export interface Booking {
   created_at: string;
   customer_id: string | null;
   therapist_id: string | null;
+  location_id?: string | null;
+  driver_id?: string | null;
+  driver_name?: string | null;
+  driver_phone?: string | null;
   booking_date: string | null;
   start_time: string | null;
   end_time: string | null;
@@ -41,6 +45,13 @@ export interface Booking {
   rating_token: string | null;
   rating_submitted: boolean;
   rating_value: number | null;
+  provider_reminder_20m_sent_at?: string | null;
+  driver_reminder_20m_sent_at?: string | null;
+  door_image_artifact_id?: string | null;
+  door_image_message_id?: string | null;
+  door_image_chat_id?: string | null;
+  door_image_created_at?: string | null;
+  door_image_match_source?: string | null;
 }
 
 export interface RescheduleBooking {

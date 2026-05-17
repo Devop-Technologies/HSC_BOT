@@ -34,10 +34,12 @@ router.post('/booking-status', async (req, res) => {
   try {
     // Fetch booking + customer info in one query
     const result = await pool.query(
-      `SELECT b.id, b.therapist_id, b.rating,
-              c.id AS customer_id, c.full_name, c.phone
+      `SELECT b.id, b.therapist_id, b.rating, b.booking_date, b.start_time,
+              c.id AS customer_id, c.full_name, c.phone,
+              s.name AS service_name
        FROM bookings b
        JOIN customer c ON c.id = b.customer_id
+       LEFT JOIN services s ON s.id = b.service_id
        WHERE b.id = $1`,
       [bookingId]
     );
@@ -66,7 +68,11 @@ router.post('/booking-status', async (req, res) => {
 
     // Send rating request to customer
     const chatId = `${booking.phone}@c.us`;
-    await sendMessage(chatId, t.askRating(booking.full_name));
+    await sendMessage(chatId, t.askRating(booking.full_name, {
+      serviceName: booking.service_name || null,
+      date: booking.booking_date || null,
+      time: booking.start_time || null,
+    }));
     await updateSession(booking.customer_id, 'booking_rating', {
       rating_booking_id:   booking.id,
       rating_therapist_id: booking.therapist_id || null,

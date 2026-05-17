@@ -3,6 +3,7 @@ const router  = express.Router();
 
 const { markSeen, startTyping, stopTyping, sendMessage, resolveContactPhone } = require('../services/wahaService');
 const { handleMessage } = require('../services/botHandler');
+const { forwardServiceInstructions } = require('../services/serviceInstructionForwardService');
 const { logMessage } = require('../services/logService');
 const { getOrCreateCustomer } = require('../services/customerService');
 const { delay, isPersonalMessage, startTypingKeepalive, stopTypingKeepalive } = require('../utils/helpers');
@@ -101,7 +102,7 @@ router.post('/', async (req, res) => {
   }
 
   // Fast-fail for media without captions — avoid waiting for AI (slow)
-  if (isMedia && !event.payload.caption) {
+  if (isMedia && !event.payload.caption && msgType !== 'image') {
     console.log(`[SKIP] ${phone}: ${msgType} without caption — instant warning`);
     enqueue(phone, async () => {
       const typeLabel = 
@@ -133,6 +134,11 @@ router.post('/', async (req, res) => {
     msgData = {
       type: msgType,
       text: caption ? `${label} ${caption}` : label,
+      caption,
+      has_media: true,
+      whatsapp_message_id: messageId,
+      chat_id: chatId,
+      media_type: msgType,
     };
     console.log(`[MEDIA] ${phone}: ${msgData.text}`);
 
@@ -151,6 +157,8 @@ router.post('/', async (req, res) => {
       name,
       address:   name,
       maps_url:  lat ? `https://maps.google.com/?q=${lat},${lng}` : null,
+      chat_id:   chatId,
+      whatsapp_message_id: messageId,
     };
     console.log(`[LOC]  ${phone}: lat=${lat}, lng=${lng}, name="${name}"`);
 
@@ -162,6 +170,8 @@ router.post('/', async (req, res) => {
     msgData = {
       type: 'text',
       text: isBase64 ? '' : rawBody,   // ignore base64 thumbnail bodies
+      chat_id: chatId,
+      whatsapp_message_id: messageId,
     };
 
     if (!isBase64) {
@@ -209,6 +219,15 @@ router.post('/', async (req, res) => {
       if (!reply) return; // provider message — silently ignore
 
       await sendMessage(chatId, withHumanChoice(reply));
+
+      if (msgData.service_instruction_forward) {
+        await forwardServiceInstructions({
+          chatId,
+          service: msgData.service_instruction_forward.service,
+          trigger: msgData.service_instruction_forward.trigger,
+          lang: msgData.service_instruction_forward.lang,
+        });
+      }
       // NOTE: We don't log the reply directly here.
       // We rely on the WAHA mirror back (fromMe) event to log it.
       // This eliminates duplicates and captures manual responses too.

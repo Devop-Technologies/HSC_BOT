@@ -188,6 +188,28 @@ function faq() {
 
 // ─── Booking flow ─────────────────────────────────────────────────────────────
 
+function askGiftDetails() {
+  return (
+    `*Gift Booking*\n` +
+    `${LINE}\n` +
+    `Is this booking a gift for someone else?\n\n` +
+    `If yes, send the recipient name and any short instructions. You can also include a voucher code if you have one.\n` +
+    `Example: _Gift for Sara. Please say it is from Noura. Voucher HSCGIFT._\n\n` +
+    `Reply *0* or *skip* if this is not a gift.`
+  );
+}
+
+function formatGiftDetails(giftDetails, lang = 'en') {
+  if (!giftDetails || typeof giftDetails !== 'object') return '';
+  const parts = [];
+  if (giftDetails.recipient_name) parts.push(lang === 'ar' ? `المستلمة: ${giftDetails.recipient_name}` : `Recipient: ${giftDetails.recipient_name}`);
+  if (giftDetails.recipient_phone) parts.push(lang === 'ar' ? `جوال المستلمة: ${giftDetails.recipient_phone}` : `Recipient phone: ${giftDetails.recipient_phone}`);
+  if (giftDetails.instructions) parts.push(lang === 'ar' ? `تعليمات الهدية: ${giftDetails.instructions}` : `Gift instructions: ${giftDetails.instructions}`);
+  if (giftDetails.voucher_code) parts.push(lang === 'ar' ? `كود القسيمة: ${giftDetails.voucher_code}` : `Voucher code: ${giftDetails.voucher_code}`);
+  if (!parts.length) return '';
+  return (lang === 'ar' ? `🎁 *تفاصيل الهدية*\n` : `🎁 *Gift details*\n`) + parts.join('\n') + '\n';
+}
+
 function askBookingType(service = null) {
   let header = '';
   if (service) {
@@ -285,7 +307,7 @@ function askDuplicateDateConfirm(existingDate, existingService, existingTime) {
   );
 }
 
-function bookingSummary({ serviceName, duration, price, locationType, address, date, time, therapistName, deliveryFee = 0, deliveryKm, discountPercent = 0 }) {
+function bookingSummary({ serviceName, duration, price, locationType, address, date, time, therapistName, deliveryFee = 0, deliveryKm, discountPercent = 0, giftDetails = null }) {
   const locationLine = locationType === 'home'
     ? `Home Visit\n   Address   :  ${address}`
     : `At the Center _(Khaleej District)_`;
@@ -317,6 +339,9 @@ function bookingSummary({ serviceName, duration, price, locationType, address, d
   if (therapistName) {
     msg += `Therapist :  ${therapistName}\n`;
   }
+
+  const giftBlock = formatGiftDetails(giftDetails, 'en');
+  if (giftBlock) msg += giftBlock;
 
   msg +=
     `${LINE}\n` +
@@ -408,10 +433,12 @@ function therapistBookingItemLine({ num, time, service, customer, phone, distric
   );
 }
 
-function providerBookingNotification({ serviceName, customerName, customerPhone, date, time, locationType, district, driverName, price }) {
+function providerBookingNotification({ serviceName, customerName, customerPhone, date, time, locationType, district, driverName, price, giftDetails = null }) {
   const locationLabel = locationType === 'center' ? '🏢 Center (Khaleej District)' : '🏠 Home Visit';
   const areaLine = district ? `📍 *Area:* ${district}\n` : '';
   const amount   = price ? `${Number(price).toFixed(0)} SAR` : 'N/A';
+  const giftBlock = formatGiftDetails(giftDetails, 'en');
+  const giftLine = giftBlock ? `${giftBlock}` : '';
   return (
     `🆕 *New Booking Assigned to You*\n` +
     `${LINE}\n` +
@@ -422,12 +449,53 @@ function providerBookingNotification({ serviceName, customerName, customerPhone,
     `🏠 *Type:* ${locationLabel}\n` +
     areaLine +
     `🚗 *Driver:* ${driverName || 'Not assigned'}\n` +
+    giftLine +
     `💰 *Collect:* ${amount} (cash)\n` +
     `📱 *Contact:* +${customerPhone}\n` +
     `${LINE}\n` +
     `Please be on time. Contact us if you have any issues.`
   );
 }
+
+
+
+function workerAreaLine({ locationType, district, city }) {
+  if (locationType === 'center') return 'Healing Space Center, Khaleej District';
+  return [district, city].filter(Boolean).join(', ') || 'Home visit';
+}
+
+function providerBookingReminder({ serviceName, customerName, customerPhone, date, time, locationType, district, city, driverName }) {
+  return [
+    `⏰ *Booking Reminder — starts in 20 minutes*`,
+    `${LINE}`,
+    `💆 *Service:* ${serviceName || 'N/A'}`,
+    `👤 *Client:* ${customerName || 'N/A'}`,
+    `📅 *Date:* ${date || 'Today'}`,
+    `🕐 *Time:* ${time || 'N/A'}`,
+    `📍 *Area:* ${workerAreaLine({ locationType, district, city })}`,
+    `🚗 *Driver:* ${driverName || 'Not assigned'}`,
+    `📱 *Client contact:* ${customerPhone ? `+${customerPhone}` : 'N/A'}`,
+    `${LINE}`,
+    `Please prepare now. If there is any issue, contact the supervisor immediately.`,
+  ].join('\n');
+}
+
+function driverBookingReminder({ providerName, serviceName, customerName, customerPhone, date, time, locationType, district, city }) {
+  return [
+    `⏰ *Driver Reminder — pickup/visit starts in 20 minutes*`,
+    `${LINE}`,
+    `💆 *Provider:* ${providerName || 'N/A'}`,
+    `💆 *Service:* ${serviceName || 'N/A'}`,
+    `👤 *Client:* ${customerName || 'N/A'}`,
+    `📅 *Date:* ${date || 'Today'}`,
+    `🕐 *Time:* ${time || 'N/A'}`,
+    `📍 *Area:* ${workerAreaLine({ locationType, district, city })}`,
+    `📱 *Client contact:* ${customerPhone ? `+${customerPhone}` : 'N/A'}`,
+    `${LINE}`,
+    `Please be ready and follow the assigned route/location.`,
+  ].join('\n');
+}
+
 
 function notInServiceArea(city) {
   const cityName = city || 'your city';
@@ -645,6 +713,8 @@ module.exports = {
   businessHours,
   faq,
   askBookingType,
+  askGiftDetails,
+  formatGiftDetails,
   askLocation,
   askDate,
   askTime,
@@ -661,6 +731,8 @@ module.exports = {
   noProviderInArea,
   notInServiceArea,
   providerBookingNotification,
+  providerBookingReminder,
+  driverBookingReminder,
   therapistDailySummary,
   therapistBookingItemLine,
   noBookings,
@@ -865,13 +937,27 @@ const AR = {
   },
 
   packagesList(packages) {
-    let msg = `*باقاتنا*\n${LINE}\n\n`;
+    let msg = `*باقاتنا*
+${LINE}
+
+`;
     packages.forEach(p => {
-      msg += `*${p.name}*\n`;
-      msg += `${p.description}\n`;
-      msg += `${p.total_sessions} جلسات  •  ${Number(p.total_price).toLocaleString()} ريال  •  صالحة ${p.validity_days} يوم\n\n`;
+      const totalSessions = p.total_sessions || 0;
+      const rawPrice = Number(p.total_price);
+      const price = (p.total_price === null || p.total_price === undefined || Number.isNaN(rawPrice) || rawPrice === 0)
+        ? 'حسب الخدمة المختارة'
+        : `${rawPrice.toLocaleString()} ريال`;
+      const validity = p.validity_days ? `  •  صالحة ${p.validity_days} يوم` : '';
+      msg += `*${p.name || 'باقة'}*
+`;
+      if (p.description) msg += `${p.description}
+`;
+      msg += `${totalSessions} جلسات  •  ${price}${validity}
+
+`;
     });
-    msg += `${LINE}\n`;
+    msg += `${LINE}
+`;
     msg += `_يمكنك دمج أي نوع جلسة طالما تتطابق المدة والسعر._\n\n`;
     msg += `لحجز باقة، ابدئي حجزاً واختاري خدمتك.\n\n`;
     msg += `اكتبي *0* للقائمة الرئيسية.`;
@@ -885,7 +971,7 @@ const AR = {
     const homeRamadan = hours.find(h => h.service_type === 'home' && h.is_ramadan);
 
     const format = (t) => {
-      if (!t) return 'N/A';
+      if (!t) return 'غير متاح';
       const [h, m] = t.split(':').map(Number);
       const period = h >= 12 ? 'م' : 'ص';
       const h12 = h % 12 || 12;
@@ -924,6 +1010,17 @@ const AR = {
       `أي تأخير يُخصم من وقت جلستك.\n` +
       `${LINE}\n` +
       `اكتبي *0* للقائمة الرئيسية.`
+    );
+  },
+
+  askGiftDetails() {
+    return (
+      `*حجز هدية*\n` +
+      `${LINE}\n` +
+      `هل هذا الحجز هدية لشخص آخر؟\n\n` +
+      `إذا نعم، أرسلي اسم المستلمة وأي تعليمات قصيرة. يمكنك أيضاً إضافة كود قسيمة إن وجد.\n` +
+      `مثال: _هدية لسارة، الرجاء إخبارها أنها من نورة، كود HSCGIFT._\n\n` +
+      `ارسلي *0* أو *تخطي* إذا لم يكن الحجز هدية.`
     );
   },
 
@@ -973,7 +1070,7 @@ const AR = {
     const homeNormal = hours.find(h => h.service_type === 'home' && !h.is_ramadan);
 
     const format = (t) => {
-      if (!t) return 'N/A';
+      if (!t) return 'غير متاح';
       const [h, m] = t.split(':').map(Number);
       const period = h >= 12 ? 'م' : 'ص';
       const h12 = h % 12 || 12;
@@ -1022,7 +1119,7 @@ const AR = {
     );
   },
 
-  bookingSummary({ serviceName, duration, price, locationType, address, date, time, therapistName, deliveryFee = 0, deliveryKm, discountPercent = 0 }) {
+  bookingSummary({ serviceName, duration, price, locationType, address, date, time, therapistName, deliveryFee = 0, deliveryKm, discountPercent = 0, giftDetails = null }) {
     const locationLine = locationType === 'home'
       ? `زيارة منزلية\n   العنوان  :  ${address}`
       : `في المركز _(حي الخليج)_`;
@@ -1054,6 +1151,9 @@ const AR = {
     if (therapistName) {
       msg += `المعالجة  :  ${therapistName}\n`;
     }
+
+    const giftBlock = formatGiftDetails(giftDetails, 'ar');
+    if (giftBlock) msg += giftBlock;
 
     msg +=
       `${LINE}\n` +
@@ -1341,9 +1441,9 @@ const AR = {
     return (
       `*الحجز ${num}*\n` +
       `الحالة    : ${statusLabelAr[status] || status}\n` +
-      `الخدمة    : ${service || 'N/A'}\n` +
-      `التاريخ   : ${date || 'TBD'}\n` +
-      `الوقت    : ${time || 'TBD'}\n` +
+      `الخدمة    : ${service || 'غير محددة'}\n` +
+      `التاريخ   : ${date || 'سيتم تأكيده'}\n` +
+      `الوقت    : ${time || 'سيتم تأكيده'}\n` +
       `النوع     : ${typeLabel}` +
       addrLine +
       thLine +

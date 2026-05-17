@@ -58,3 +58,45 @@ ALTER TABLE customer_locations
   ADD COLUMN IF NOT EXISTS latitude  NUMERIC(10,7),
   ADD COLUMN IF NOT EXISTS longitude NUMERIC(10,7),
   ADD COLUMN IF NOT EXISTS maps_url  TEXT;
+
+
+-- Stage 2: customer media artifacts for forwardable WhatsApp message ids.
+-- V1 stores the original provider-forwardable messageId; it does not download or
+-- persist media bytes. New Supabase tables are used by the backend through direct
+-- Postgres access, not automatically exposed through the Data API.
+CREATE TABLE IF NOT EXISTS customer_media_artifacts (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID NOT NULL REFERENCES customer(id) ON DELETE CASCADE,
+  booking_id  UUID REFERENCES bookings(id) ON DELETE SET NULL,
+  location_id UUID REFERENCES customer_locations(id) ON DELETE SET NULL,
+  message_id  TEXT NOT NULL UNIQUE,
+  chat_id     TEXT,
+  media_type  TEXT NOT NULL DEFAULT 'image',
+  purpose     TEXT NOT NULL DEFAULT 'door_image',
+  caption     TEXT,
+  metadata    JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMP DEFAULT NOW(),
+  updated_at  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_customer_media_artifacts_customer_purpose
+  ON customer_media_artifacts(customer_id, purpose, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_customer_media_artifacts_booking
+  ON customer_media_artifacts(booking_id)
+  WHERE booking_id IS NOT NULL;
+
+-- Stage 3: provider/driver T-minus-20 reminder idempotency markers.
+ALTER TABLE bookings
+  ADD COLUMN IF NOT EXISTS provider_reminder_20m_sent_at TIMESTAMP,
+  ADD COLUMN IF NOT EXISTS driver_reminder_20m_sent_at TIMESTAMP;
+
+
+-- Stage 7: optional isolated gift booking metadata.
+-- Voucher codes are stored as metadata only; pricing/package wallet semantics remain unchanged.
+ALTER TABLE bookings
+  ADD COLUMN IF NOT EXISTS gift_details JSONB;
+
+CREATE INDEX IF NOT EXISTS idx_bookings_gift_details
+  ON bookings USING GIN (gift_details)
+  WHERE gift_details IS NOT NULL;

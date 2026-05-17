@@ -85,7 +85,7 @@ export default function BotMessagesPage() {
             Bot Messages
           </h2>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Every static message the bot sends to customers. Changes take effect immediately.
+            Short, feminine customer copy. Arabic is shown in full so each branch can be reviewed.
           </p>
         </div>
         <div className="flex gap-2">
@@ -136,7 +136,7 @@ export default function BotMessagesPage() {
 
       {/* Existing messages table */}
       <Table
-        headers={['Key', 'English', 'Arabic', 'Updated', '']}
+        headers={['Key', 'English message', 'Arabic message', 'Updated', '']}
         loading={loading}
         isEmpty={messages.length === 0}
         emptyText="No bot messages yet. Messages will fall back to built-in defaults."
@@ -149,27 +149,27 @@ export default function BotMessagesPage() {
                 {msg.key}
               </code>
             </Td>
-            <Td className="max-w-[250px]">
+            <Td className="max-w-[340px] align-top">
               {editing?.key === msg.key ? (
                 <textarea value={editing.message_en} onChange={e => setEditing({ ...editing, message_en: e.target.value })}
                   rows={2} className="w-full px-2 py-1 rounded text-sm outline-none resize-y"
                   style={{ background: 'var(--color-input-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-text-primary)' }} />
               ) : (
-                <p className="text-sm truncate" style={{ color: 'var(--color-text-primary)' }} title={msg.message_en}>{msg.message_en}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>{msg.message_en}</p>
               )}
             </Td>
-            <Td className="max-w-[250px]">
+            <Td className="max-w-[380px] align-top">
               {editing?.key === msg.key ? (
                 <textarea value={editing.message_ar} onChange={e => setEditing({ ...editing, message_ar: e.target.value })}
                   rows={2} dir="rtl" className="w-full px-2 py-1 rounded text-sm outline-none resize-y"
                   style={{ background: 'var(--color-input-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-text-primary)' }} />
               ) : (
-                <p className="text-sm truncate font-arabic" dir="rtl" style={{ color: 'var(--color-text-primary)' }} title={msg.message_ar}>{msg.message_ar}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed font-arabic" dir="rtl" style={{ color: 'var(--color-text-primary)' }}>{msg.message_ar}</p>
               )}
             </Td>
             <Td>
               <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                {msg.updated_at ? new Date(msg.updated_at).toLocaleDateString() : '—'}
+                {msg.updated_at ? new Date(msg.updated_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
               </span>
             </Td>
             <Td>

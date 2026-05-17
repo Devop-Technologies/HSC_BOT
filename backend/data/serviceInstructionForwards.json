@@ -1,0 +1,813 @@
+{
+  "enabled": true,
+  "schemaVersion": 2,
+  "purpose": "Per child-service/sub-service WhatsApp instruction forwarding. Placeholder entries are ignored by code until placeholder=false.",
+  "howToUse": [
+    "Find the child service by service_price_option_id or service/service_option_label.",
+    "Replace text.en/text.ar and/or add WhatsApp source messageIds.",
+    "Set placeholder=false. Keep enabled=true. trigger service_selected sends after the customer selects that child service.",
+    "Use enabled=false to temporarily disable one instruction entry."
+  ],
+  "entries": [
+    {
+      "key": "bamboo-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "56fbcc6e-c130-4084-ac23-0feb9aeb1d7d",
+      "service_name": "Bamboo Massage",
+      "service_name_ar": "مساج البامبو",
+      "service_price_option_id": "8433a02f-0950-441d-85d7-47b3de0a1301",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 1,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "bamboo-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "56fbcc6e-c130-4084-ac23-0feb9aeb1d7d",
+      "service_name": "Bamboo Massage",
+      "service_name_ar": "مساج البامبو",
+      "service_price_option_id": "8433a02f-0950-441d-85d7-47b3de0a1301",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 2,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "deep-tissue-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "5e18d246-0a99-4ea6-8d33-e1ef1a9bcaf8",
+      "service_name": "Deep Tissue Massage",
+      "service_name_ar": "مساج الأنسجة العميقة",
+      "service_price_option_id": "d853111c-541c-42c4-a9fe-63e2a84e27e6",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 3,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "deep-tissue-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "5e18d246-0a99-4ea6-8d33-e1ef1a9bcaf8",
+      "service_name": "Deep Tissue Massage",
+      "service_name_ar": "مساج الأنسجة العميقة",
+      "service_price_option_id": "d853111c-541c-42c4-a9fe-63e2a84e27e6",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 4,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "deep-tissue-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "5e18d246-0a99-4ea6-8d33-e1ef1a9bcaf8",
+      "service_name": "Deep Tissue Massage",
+      "service_name_ar": "مساج الأنسجة العميقة",
+      "service_price_option_id": "c5d91d13-c73c-4490-92cb-b2f1669226e9",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 5,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "deep-tissue-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "5e18d246-0a99-4ea6-8d33-e1ef1a9bcaf8",
+      "service_name": "Deep Tissue Massage",
+      "service_name_ar": "مساج الأنسجة العميقة",
+      "service_price_option_id": "c5d91d13-c73c-4490-92cb-b2f1669226e9",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 6,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "hot-stone-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "74d69d44-977f-4b1e-813a-963e01054771",
+      "service_name": "Hot Stone Massage",
+      "service_name_ar": "مساج الأحجار الساخنة",
+      "service_price_option_id": "9ccb9372-0dd4-427e-af5c-6de161b910fb",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 7,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "hot-stone-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "74d69d44-977f-4b1e-813a-963e01054771",
+      "service_name": "Hot Stone Massage",
+      "service_name_ar": "مساج الأحجار الساخنة",
+      "service_price_option_id": "9ccb9372-0dd4-427e-af5c-6de161b910fb",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 8,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "hot-stone-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "74d69d44-977f-4b1e-813a-963e01054771",
+      "service_name": "Hot Stone Massage",
+      "service_name_ar": "مساج الأحجار الساخنة",
+      "service_price_option_id": "37fa3782-03b2-487d-adf5-9a14fb4b8e1b",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 9,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "hot-stone-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "74d69d44-977f-4b1e-813a-963e01054771",
+      "service_name": "Hot Stone Massage",
+      "service_name_ar": "مساج الأحجار الساخنة",
+      "service_price_option_id": "37fa3782-03b2-487d-adf5-9a14fb4b8e1b",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 10,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "prenatal-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "5d40e092-b55a-4555-9b3e-1143f2f83892",
+      "service_name": "Prenatal Massage",
+      "service_name_ar": "مساج الحامل",
+      "service_price_option_id": "f80d4f46-94dc-4756-840d-d692ce92652e",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 11,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "prenatal-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "5d40e092-b55a-4555-9b3e-1143f2f83892",
+      "service_name": "Prenatal Massage",
+      "service_name_ar": "مساج الحامل",
+      "service_price_option_id": "f80d4f46-94dc-4756-840d-d692ce92652e",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 12,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "cellulite-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "adc4c5f6-5980-4c8d-b6e2-b25f48dfa83f",
+      "service_name": "Cellulite Massage",
+      "service_name_ar": "مساج السيلوليت",
+      "service_price_option_id": "972dbc30-9581-4263-ab14-67c484394814",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 13,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "cellulite-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "adc4c5f6-5980-4c8d-b6e2-b25f48dfa83f",
+      "service_name": "Cellulite Massage",
+      "service_name_ar": "مساج السيلوليت",
+      "service_price_option_id": "972dbc30-9581-4263-ab14-67c484394814",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 14,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "cellulite-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "adc4c5f6-5980-4c8d-b6e2-b25f48dfa83f",
+      "service_name": "Cellulite Massage",
+      "service_name_ar": "مساج السيلوليت",
+      "service_price_option_id": "203fe309-dd56-4114-9af5-6257fa6ba882",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 15,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "cellulite-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "adc4c5f6-5980-4c8d-b6e2-b25f48dfa83f",
+      "service_name": "Cellulite Massage",
+      "service_name_ar": "مساج السيلوليت",
+      "service_price_option_id": "203fe309-dd56-4114-9af5-6257fa6ba882",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 16,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "herbal-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "a0bc69b0-a559-4ecc-afe2-1494e5fd83d2",
+      "service_name": "Herbal Massage",
+      "service_name_ar": "مساج الأعشاب الساخنة",
+      "service_price_option_id": "902eaf85-f5f1-4f44-bb28-3f978c5b6da6",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 17,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "herbal-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "a0bc69b0-a559-4ecc-afe2-1494e5fd83d2",
+      "service_name": "Herbal Massage",
+      "service_name_ar": "مساج الأعشاب الساخنة",
+      "service_price_option_id": "902eaf85-f5f1-4f44-bb28-3f978c5b6da6",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 18,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "herbal-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "a0bc69b0-a559-4ecc-afe2-1494e5fd83d2",
+      "service_name": "Herbal Massage",
+      "service_name_ar": "مساج الأعشاب الساخنة",
+      "service_price_option_id": "9ec8e0fa-d6ee-4047-83c1-98b5777aee64",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 19,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "herbal-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "a0bc69b0-a559-4ecc-afe2-1494e5fd83d2",
+      "service_name": "Herbal Massage",
+      "service_name_ar": "مساج الأعشاب الساخنة",
+      "service_price_option_id": "9ec8e0fa-d6ee-4047-83c1-98b5777aee64",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 20,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "postnatal-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "2de1d052-c9c0-4396-8238-e245edace710",
+      "service_name": "Postnatal Massage",
+      "service_name_ar": "مساج ما بعد الولادة",
+      "service_price_option_id": "7cef5812-7f3d-48c1-b318-fca6dfbf3d20",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 21,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "postnatal-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "2de1d052-c9c0-4396-8238-e245edace710",
+      "service_name": "Postnatal Massage",
+      "service_name_ar": "مساج ما بعد الولادة",
+      "service_price_option_id": "7cef5812-7f3d-48c1-b318-fca6dfbf3d20",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 22,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "trigger-point-therapy-oil-free-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "1d508c9a-9650-400a-b7a1-4db815083d74",
+      "service_name": "Trigger Point Therapy (Oil-free)",
+      "service_name_ar": "مساج نقاط التحفيز (بدون زيت)",
+      "service_price_option_id": "c174a6cf-bf5c-4fdd-add6-72f38bd3d916",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 23,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "trigger-point-therapy-oil-free-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "1d508c9a-9650-400a-b7a1-4db815083d74",
+      "service_name": "Trigger Point Therapy (Oil-free)",
+      "service_name_ar": "مساج نقاط التحفيز (بدون زيت)",
+      "service_price_option_id": "c174a6cf-bf5c-4fdd-add6-72f38bd3d916",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 24,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "air-cupping-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "42ecfdd6-4df6-412c-83db-4c8a3f47339b",
+      "service_name": "Air Cupping Massage",
+      "service_name_ar": "مساج أكواب الهواء",
+      "service_price_option_id": "1586acf6-9302-4ff3-9b65-d38a1c2331ba",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 25,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "air-cupping-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "42ecfdd6-4df6-412c-83db-4c8a3f47339b",
+      "service_name": "Air Cupping Massage",
+      "service_name_ar": "مساج أكواب الهواء",
+      "service_price_option_id": "1586acf6-9302-4ff3-9b65-d38a1c2331ba",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 26,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "lymphatic-drainage-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "c44a05c0-d1ce-4fe3-b0c9-2f2be5ee3ac0",
+      "service_name": "Lymphatic Drainage Massage",
+      "service_name_ar": "المساج الليمفاوي",
+      "service_price_option_id": "2d1248f4-9514-4f69-9aea-4240a74976ab",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 27,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "lymphatic-drainage-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "c44a05c0-d1ce-4fe3-b0c9-2f2be5ee3ac0",
+      "service_name": "Lymphatic Drainage Massage",
+      "service_name_ar": "المساج الليمفاوي",
+      "service_price_option_id": "2d1248f4-9514-4f69-9aea-4240a74976ab",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 28,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "swedish-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "c96d0e83-eccc-4b1c-ab28-c40627834c5c",
+      "service_name": "Swedish Massage",
+      "service_name_ar": "المساج السويدي",
+      "service_price_option_id": "f8dc1214-2891-496b-98ff-64ed085aba1b",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 29,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "swedish-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "c96d0e83-eccc-4b1c-ab28-c40627834c5c",
+      "service_name": "Swedish Massage",
+      "service_name_ar": "المساج السويدي",
+      "service_price_option_id": "f8dc1214-2891-496b-98ff-64ed085aba1b",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 30,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "swedish-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "c96d0e83-eccc-4b1c-ab28-c40627834c5c",
+      "service_name": "Swedish Massage",
+      "service_name_ar": "المساج السويدي",
+      "service_price_option_id": "f1e4f509-7286-4b1a-84c3-41d2a66f474f",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 31,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "swedish-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "c96d0e83-eccc-4b1c-ab28-c40627834c5c",
+      "service_name": "Swedish Massage",
+      "service_name_ar": "المساج السويدي",
+      "service_price_option_id": "f1e4f509-7286-4b1a-84c3-41d2a66f474f",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 32,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "sports-massage-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "a168a51d-cfee-4f14-b2b5-eaa17960075d",
+      "service_name": "Sports Massage",
+      "service_name_ar": "المساج الرياضي",
+      "service_price_option_id": "5c9e4fd4-f8f8-4baf-9c6a-dae04bb60768",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 33,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "sports-massage-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "a168a51d-cfee-4f14-b2b5-eaa17960075d",
+      "service_name": "Sports Massage",
+      "service_name_ar": "المساج الرياضي",
+      "service_price_option_id": "5c9e4fd4-f8f8-4baf-9c6a-dae04bb60768",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 34,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "sports-massage-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "a168a51d-cfee-4f14-b2b5-eaa17960075d",
+      "service_name": "Sports Massage",
+      "service_name_ar": "المساج الرياضي",
+      "service_price_option_id": "cabbc639-04a3-41b2-9706-edfbb8700230",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 35,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "sports-massage-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "a168a51d-cfee-4f14-b2b5-eaa17960075d",
+      "service_name": "Sports Massage",
+      "service_name_ar": "المساج الرياضي",
+      "service_price_option_id": "cabbc639-04a3-41b2-9706-edfbb8700230",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 36,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "thai-floor-massage-no-oil-60-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "39d9c1b6-4316-4b9c-849b-b1801c344fdf",
+      "service_name": "Thai Floor Massage (No Oil)",
+      "service_name_ar": "المساج التايلندي (بدون زيت - أرضي)",
+      "service_price_option_id": "25772078-72b7-400e-9c29-9412f805561a",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 37,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "thai-floor-massage-no-oil-60-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "39d9c1b6-4316-4b9c-849b-b1801c344fdf",
+      "service_name": "Thai Floor Massage (No Oil)",
+      "service_name_ar": "المساج التايلندي (بدون زيت - أرضي)",
+      "service_price_option_id": "25772078-72b7-400e-9c29-9412f805561a",
+      "service_option_label": "60 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 38,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "thai-floor-massage-no-oil-90-minutes-before",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "before_sub_service",
+      "service_id": "39d9c1b6-4316-4b9c-849b-b1801c344fdf",
+      "service_name": "Thai Floor Massage (No Oil)",
+      "service_name_ar": "المساج التايلندي (بدون زيت - أرضي)",
+      "service_price_option_id": "46b8b4bd-5a9a-4030-9b26-4d77c2158775",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 39,
+      "text": {
+        "en": "Instructions before sub-service A",
+        "ar": "تعليمات قبل الخدمة الفرعية A"
+      },
+      "messageIds": []
+    },
+    {
+      "key": "thai-floor-massage-no-oil-90-minutes-after",
+      "enabled": true,
+      "placeholder": true,
+      "phase": "after_sub_service",
+      "service_id": "39d9c1b6-4316-4b9c-849b-b1801c344fdf",
+      "service_name": "Thai Floor Massage (No Oil)",
+      "service_name_ar": "المساج التايلندي (بدون زيت - أرضي)",
+      "service_price_option_id": "46b8b4bd-5a9a-4030-9b26-4d77c2158775",
+      "service_option_label": "90 minutes",
+      "triggers": [
+        "service_selected"
+      ],
+      "sort_order": 40,
+      "text": {
+        "en": "Instructions after sub-service A",
+        "ar": "تعليمات بعد الخدمة الفرعية A"
+      },
+      "messageIds": []
+    }
+  ]
+}

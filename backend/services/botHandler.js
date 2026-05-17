@@ -6,6 +6,7 @@ const { getAllServices, getServiceByIndex, getServiceById, getAllPackages, getBu
 const { saveLocation, getDefaultLocation, createBooking, confirmBookingAtomic, saveCalendarEventId, cancelBooking, getExistingBookingOnDate, getCustomerBookings, tryParseDate, tryParseTime, findAndCompleteActiveBooking, saveBookingRating, saveBookingFeedback, getReschedulableBookings, getBookingById, updateBookingDateTime, updateBookingLocation } = require('./bookingService');
 
 const { logMessage, getRecentMessages } = require('./logService');
+const { saveIncomingMediaArtifact } = require('./mediaArtifactService');
 const { getOllamaReply } = require('./ollamaService');
 const { getAzureReply } = require('./azureOpenAIService');
 const { getActiveSystemPrompt } = require('./systemPromptService');
@@ -67,6 +68,17 @@ function defaultCommercialOption(service) {
     duration_minutes: firstOption?.duration_minutes ?? service.duration_minutes ?? null,
     delivery_fee: firstOption?.delivery_fee ?? service.delivery_fee ?? null,
   };
+}
+
+function markServiceInstructionForward(msgData, service, trigger, lang, option = null) {
+  if (msgData && typeof msgData === 'object' && service) {
+    const selected = option ? serviceSelectionPayload(service, option) : {};
+    msgData.service_instruction_forward = {
+      service: { ...service, ...selected },
+      trigger,
+      lang,
+    };
+  }
 }
 
 function serviceSelectionPayload(service, option = null) {
@@ -198,6 +210,48 @@ function referralRecordedText(result, lang = 'en') {
   if (result.reason === 'returning_client') return 'Referral codes count for new clients only. Since you already have a completed booking, this referral cannot be counted.';
   if (result.reason === 'already_attributed') return 'Your referral was already recorded. Referral codes cannot be changed after registration.';
   return 'Referral code recorded ✅ It will qualify after your first completed booking if you are a new client.';
+}
+
+
+function isGiftSkip(text) {
+  const value = String(text || '').trim().toLowerCase();
+  return ['0', 'skip', 'no', 'n', 'not gift', 'not a gift', 'لا', 'تخطي', 'تجاوز'].includes(value);
+}
+
+function isGiftAffirmationOnly(text) {
+  const value = String(text || '').trim().toLowerCase();
+  return ['yes', 'y', 'gift', 'it is a gift', 'نعم', 'هدية', 'اي', 'ايوه'].includes(value);
+}
+
+function selectedServicePromptPayload(sessionData = {}) {
+  return {
+    id: sessionData.selected_service_id,
+    name: sessionData.selected_service_name,
+    price: sessionData.selected_service_price,
+    duration_minutes: sessionData.selected_service_duration,
+    delivery_fee: sessionData.selected_service_delivery_fee,
+  };
+}
+
+function parseGiftBookingDetails(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  const compact = raw.replace(/\s+/g, ' ').trim();
+  const details = {};
+  const recipientMatch = compact.match(/(?:recipient|for|to|المستلمة|لـ|إلى|الى)\s*[:\-]?\s*([^.;،]+)(?=\s+(?:voucher|code|instructions|message|from|كود|تعليمات|رسالة|من)\b|[.;،]|$)/i);
+  const voucherMatch = compact.match(/(?:voucher|coupon|code|قسيمة|كود)\s*[:#\-]?\s*([A-Z0-9][A-Z0-9_-]{2,31})/i);
+  const instructionMatch = compact.match(/(?:instructions?|message|note|تعليمات|رسالة|ملاحظة)\s*[:\-]?\s*(.+)$/i);
+  const phoneMatch = compact.match(/(?:phone|mobile|جوال|رقم)\s*[:\-]?\s*(\+?\d[\d\s-]{6,20})/i);
+
+  if (recipientMatch) details.recipient_name = recipientMatch[1].trim();
+  if (phoneMatch) details.recipient_phone = phoneMatch[1].replace(/\s+/g, ' ').trim();
+  if (instructionMatch) details.instructions = instructionMatch[1].trim();
+  if (voucherMatch) details.voucher_code = voucherMatch[1].toUpperCase();
+
+  if (!details.recipient_name && !details.instructions && !details.voucher_code && !details.recipient_phone) {
+    details.instructions = compact;
+  }
+  return { is_gift: true, ...details };
 }
 
 async function askPackageChoice(customerId, servicePayload, lang) {
@@ -1220,7 +1274,7 @@ function getBestServiceGuide(name, services, lang = 'en') {
 // Steps where we should NOT intercept with health recommendations
 // (user is mid-booking — don't pull them out of the flow)
 const BOOKING_IN_PROGRESS_STEPS = new Set([
-  'booking_type', 'booking_location',
+  'gift_details', 'booking_type', 'booking_location',
   'booking_day_confirm', 'booking_time_select',
   'booking_summary', 'booking_date', 'booking_date_duplicate_confirm', 'booking_time',
   'booking_duplicate_confirm',
@@ -1390,6 +1444,44 @@ async function handleMessage(phone, msgData) {
   const session     = await getOrCreateSession(customer.id);
   const step        = session.current_step;
   const sessionData = session.session_data || {};
+
+  // ── 3a. Door/location image capture ──────────────────────────────────────
+  // Stage 2: preserve the original WhatsApp message id for door/location images.
+  // The full door-photo workflow is wired in a later stage; this gate only stores
+  // the provider-forwardable messageId when the session is explicitly expecting it.
+  const isIncomingImage = typeof msgData === 'object' && msgData.has_media && msgData.media_type === 'image' && msgData.whatsapp_message_id;
+  const expectsDoorImage = Boolean(sessionData.awaiting_door_photo) || step === 'booking_door_photo';
+  if (isIncomingImage) {
+    if (!expectsDoorImage) {
+      return `I'm sorry, I'm unable to view images at this time. Could you please *type* your request or question instead?`;
+    }
+
+    const artifact = await saveIncomingMediaArtifact({
+      customerId: customer.id,
+      bookingId: sessionData.booking_id || sessionData.confirmed_booking_id || sessionData.updating_booking_id || null,
+      locationId: sessionData.location_id || null,
+      messageId: msgData.whatsapp_message_id,
+      chatId: msgData.chat_id || null,
+      mediaType: msgData.media_type,
+      purpose: 'door_image',
+      caption: msgData.caption || null,
+      metadata: {
+        source: 'whatsapp_webhook',
+        step,
+        location_type: sessionData.location_type || null,
+      },
+    });
+
+    await updateSession(customer.id, step, {
+      latest_door_image_artifact_id: artifact.id,
+      latest_door_image_message_id: artifact.message_id,
+      latest_door_image_chat_id: artifact.chat_id,
+      latest_door_image_captured_at: artifact.created_at,
+      awaiting_door_photo: false,
+    });
+
+    return `Thank you — I saved the door photo for this booking.`;
+  }
 
   // ── 3b. Language detection ───────────────────────────────────────────────
   // Detect Arabic from current message; persist choice in session so all
@@ -1582,7 +1674,7 @@ async function handleMessage(phone, msgData) {
   // Skip this interceptor when the customer is already mid-booking flow —
   // "change date", "change time" etc. are in-flow corrections handled by the step itself.
   const IN_FLOW_STEPS = new Set([
-    'booking_type', 'booking_location', 'booking_day_confirm',
+    'gift_details', 'booking_type', 'booking_location', 'booking_day_confirm',
     'booking_time_select', 'booking_summary', 'booking_duplicate_confirm',
     'booking_date', 'booking_time', 'booking_date_duplicate_confirm',
     'update_field_select', 'update_location_confirm',
@@ -1730,7 +1822,7 @@ async function handleMessage(phone, msgData) {
              const prefilledTime = extractTimeFromTextPattern(text);
              const prefilledLoc  = extractLocationTypeFromText(text);
 
-             await updateSession(customer.id, 'booking_type', {
+             await updateSession(customer.id, 'gift_details', {
                 selected_service_id:       specificService.id,
                 selected_service_name:     specificService.name,
                 selected_service_price:    specificService.price,
@@ -1759,7 +1851,7 @@ async function handleMessage(phone, msgData) {
                 }
              }
 
-             reply = intro + '\n\n' + t.connectorSure() + t.askBookingType(specificService);
+             reply = intro + '\n\n' + t.askGiftDetails();
              break;
           }
 
@@ -1850,13 +1942,13 @@ async function handleMessage(phone, msgData) {
         const chosenId = recIds[num - 1];
         const service  = await getServiceById(chosenId);
         if (service) {
-          await updateSession(customer.id, 'booking_type', {
+          await updateSession(customer.id, 'gift_details', {
             selected_service_id:       service.id,
             selected_service_name:     service.name,
             selected_service_price:    service.price,
             selected_service_duration: service.duration_minutes,
           });
-          reply = t.connectorSure() + t.askBookingType(service);
+          reply = t.connectorSure() + t.askGiftDetails();
           break;
         }
       }
@@ -1891,6 +1983,7 @@ async function handleMessage(phone, msgData) {
         aiFallback: () => aiReply(text, 'services_list', name, customer.id, lang),
         onLeaf: async (service) => {
           await updateSession(customer.id, 'service_detail', { viewing_service_id: service.id, from: 'browse' });
+          markServiceInstructionForward(msgData, service, 'service_detail', lang);
           return t.serviceDetail({ ...service, ...defaultCommercialOption(service) });
         },
       });
@@ -1918,6 +2011,7 @@ async function handleMessage(phone, msgData) {
             });
             return serviceOptionMenuText(service, lang);
           }
+          markServiceInstructionForward(msgData, service, 'service_selected', lang, options[0] || null);
           return await askPackageChoice(customer.id, serviceSelectionPayload(service, options[0] || null), lang);
         },
       });
@@ -1942,6 +2036,7 @@ async function handleMessage(phone, msgData) {
         break;
       }
       const option = options[num - 1];
+      markServiceInstructionForward(msgData, service, 'service_selected', lang, option);
       reply = await askPackageChoice(customer.id, serviceSelectionPayload(service, option), lang);
       break;
     }
@@ -1961,12 +2056,38 @@ async function handleMessage(phone, msgData) {
           reply = serviceOptionMenuText(service, lang);
           break;
         }
+        markServiceInstructionForward(msgData, service, 'service_selected', lang, options[0] || null);
         reply = await askPackageChoice(customer.id, serviceSelectionPayload(service, options[0] || null), lang);
       } else if (['no', 'n', 'لا', 'nope', 'back', 'go back', 'الغاء', 'إلغاء'].includes(lower)) {
         reply = await showCatalogForSession(customer.id, 'browse', lang, sessionData.catalog_parent_id || null, sessionData);
       } else {
         reply = await aiReply(text, 'service_detail', name, customer.id, lang);
       }
+      break;
+    }
+
+    // ── gift_details ───────────────────────────────────────────────────────────
+    case 'gift_details': {
+      if (isBackCommand(lower) || ['cancel', 'الغاء', 'إلغاء'].includes(lower)) {
+        await resetSession(customer.id);
+        reply = await getBookingCancelledReply(lang, t);
+        break;
+      }
+
+      const servicePrompt = selectedServicePromptPayload(sessionData);
+      if (isGiftSkip(text)) {
+        await updateSession(customer.id, 'booking_type', { gift_details: null });
+        reply = t.connectorOk() + t.askBookingType(servicePrompt);
+        break;
+      }
+      if (isGiftAffirmationOnly(text)) {
+        reply = t.askGiftDetails();
+        break;
+      }
+
+      const giftDetails = parseGiftBookingDetails(text);
+      await updateSession(customer.id, 'booking_type', { gift_details: giftDetails });
+      reply = (lang === 'ar' ? 'تم حفظ تفاصيل الهدية. ' : 'Gift details saved. ') + t.askBookingType(servicePrompt);
       break;
     }
 
@@ -1979,19 +2100,13 @@ async function handleMessage(phone, msgData) {
       }
 
       if (text === '1' || lower.includes('single') || lower.includes('مفرد')) {
-        await updateSession(customer.id, 'booking_type', {
+        await updateSession(customer.id, 'gift_details', {
           package_customer_id: null,
           package_redemption_status: null,
           package_pricing_source: 'standard',
           discount_percent: 0,
         });
-        reply = t.connectorSure() + t.askBookingType({
-          id: sessionData.selected_service_id,
-          name: sessionData.selected_service_name,
-          price: sessionData.selected_service_price,
-          duration_minutes: sessionData.selected_service_duration,
-          delivery_fee: sessionData.selected_service_delivery_fee,
-        });
+        reply = t.connectorSure() + t.askGiftDetails();
         break;
       }
 
@@ -2010,19 +2125,13 @@ async function handleMessage(phone, msgData) {
         }
         if (wallets.length === 1) {
           const wallet = wallets[0];
-          await updateSession(customer.id, 'booking_type', {
+          await updateSession(customer.id, 'gift_details', {
             package_customer_id: wallet.id,
             package_redemption_status: 'reserved',
             package_pricing_source: 'package',
             discount_percent: Number(wallet.effective_discount_percent || 100),
           });
-          reply = (lang === 'ar' ? 'تم اختيار الباقة. ' : 'Package selected. ') + t.askBookingType({
-            id: sessionData.selected_service_id,
-            name: sessionData.selected_service_name,
-            price: sessionData.selected_service_price,
-            duration_minutes: sessionData.selected_service_duration,
-            delivery_fee: sessionData.selected_service_delivery_fee,
-          });
+          reply = (lang === 'ar' ? 'تم اختيار الباقة. ' : 'Package selected. ') + t.askGiftDetails();
           break;
         }
         await updateSession(customer.id, 'package_wallet_select', {
@@ -2061,19 +2170,13 @@ async function handleMessage(phone, msgData) {
         break;
       }
       const wallet = wallets[num - 1];
-      await updateSession(customer.id, 'booking_type', {
+      await updateSession(customer.id, 'gift_details', {
         package_customer_id: wallet.id,
         package_redemption_status: 'reserved',
         package_pricing_source: 'package',
         discount_percent: Number(wallet.effective_discount_percent || 100),
       });
-      reply = (lang === 'ar' ? 'تم اختيار الباقة. ' : 'Package selected. ') + t.askBookingType({
-        id: sessionData.selected_service_id,
-        name: sessionData.selected_service_name,
-        price: sessionData.selected_service_price,
-        duration_minutes: sessionData.selected_service_duration,
-        delivery_fee: sessionData.selected_service_delivery_fee,
-      });
+      reply = (lang === 'ar' ? 'تم اختيار الباقة. ' : 'Package selected. ') + t.askGiftDetails();
       break;
     }
 
@@ -2200,6 +2303,7 @@ You can book a single session now, or come back after activation.
                  time:          formatTime12h(preTime),
                  therapistName: availability.therapistName,
                  discountPercent: sessionData.discount_percent || 0,
+                 giftDetails: sessionData.gift_details || null,
               });
            } else {
               // Time doesn't match or not provided — go to time selection
@@ -2787,6 +2891,7 @@ Type *0* for main menu.`;
           deliveryFee:   d.delivery_fee,
           deliveryKm:    d.delivery_km,
           discountPercent: d.discount_percent || 0,
+          giftDetails: d.gift_details || null,
         });
       } else if (extractTimeFromTextPattern(text) && sessionData.available_slots?.includes(extractTimeFromTextPattern(text).substring(0, 5))) {
         // Natural language time was provided (e.g. "3 pm") and it perfectly matches an available slot!
@@ -2826,6 +2931,7 @@ Type *0* for main menu.`;
           deliveryFee:   d.delivery_fee,
           deliveryKm:    d.delivery_km,
           discountPercent: d.discount_percent || 0,
+          giftDetails: d.gift_details || null,
         });
       } else if (extractTimeFromTextPattern(text)) {
         // A time was provided but it DOES NOT match any available slot
@@ -2963,6 +3069,7 @@ Type *0* for main menu.`;
         deliveryFee:  d.delivery_fee,
         deliveryKm:   d.delivery_km,
         discountPercent: d.discount_percent || 0,
+        giftDetails: d.gift_details || null,
       });
       break;
     }
@@ -3100,6 +3207,7 @@ Type *0* for main menu.`;
               packageRedemptionStatus: sessionData.package_customer_id ? 'reserved' : null,
               packagePricingSource:  sessionData.package_customer_id ? 'package' : 'standard',
             },
+            giftDetails: sessionData.gift_details || null,
           });
         } catch (bookingErr) {
           // Slot or district was taken between revalidate and the actual write
@@ -3256,6 +3364,7 @@ Type *0* for main menu.`;
               packageRedemptionStatus: sessionData.package_customer_id ? 'reserved' : null,
               packagePricingSource:  sessionData.package_customer_id ? 'package' : 'standard',
             },
+            giftDetails: sessionData.gift_details || null,
           });
         } catch (bookingErr) {
           console.warn('[BOOKING] Atomic conflict on duplicate-confirm:', bookingErr.code, bookingErr.message);
@@ -3705,6 +3814,7 @@ async function notifyProvider(sessionData, customerName, customerPhone, driverNa
     locationType:  sessionData.location_type,
     district:      sessionData.district || null,
     driverName:    driverName || null,
+    giftDetails:   sessionData.gift_details || null,
     // price:         sessionData.selected_service_price || null,
   });
 

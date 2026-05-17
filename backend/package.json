@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "scrape": "node scrapeACP.js"
+    "test": "node tests/workerReminderDoorForward.smoke.js && node tests/serviceInstructionForward.smoke.js && node tests/giftBookingWorkflow.smoke.js",
+    "check": "node --check server.js && find routes services tests -name '*.js' -print0 | xargs -0 -n1 node --check"
   },
   "keywords": [],
   "author": "",
@@ -16,8 +16,6 @@
     "express": "^5.2.1",
     "googleapis": "^171.4.0",
     "node-cron": "^4.2.1",
-    "pg": "^8.18.0",
-    "puppeteer": "^24.37.3",
-    "xlsx": "^0.18.5"
+    "pg": "^8.18.0"
   }
 }

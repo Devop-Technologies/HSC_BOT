@@ -11,12 +11,47 @@ let messagesCache = {};
 let cacheTimestamp = 0;
 const CACHE_TTL = 60000; // 1 minute
 
+const FALLBACK_SENTINEL = '{fallback}';
+
+function normalizeStoredMessage(value) {
+  if (value === null || value === undefined) return '';
+  const text = String(value);
+  return text.trim() === FALLBACK_SENTINEL ? '' : text;
+}
+
+function formatPlaceholderValue(value) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : value.toISOString().slice(0, 10);
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
+  if (typeof value === 'object') return '';
+  const text = String(value);
+  if (/^(undefined|null|NaN|Invalid Date|\[object Object\])$/i.test(text.trim())) return '';
+  return text;
+}
+
+function sanitizeRenderedMessage(text) {
+  if (!text) return text;
+  return String(text)
+    .replace(/\bundefined\b/g, '')
+    .replace(/\bnull\b/g, '')
+    .replace(/\bNaN\b/g, '')
+    .replace(/Invalid Date/g, '')
+    .replace(/\[object Object\]/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{4,}/g, '\n\n\n')
+    .trim();
+}
+
+
 async function refreshCache() {
   try {
     const result = await pool.query('SELECT key, message_en, message_ar FROM bot_messages');
     messagesCache = {};
     for (const row of result.rows) {
-      messagesCache[row.key] = { en: row.message_en, ar: row.message_ar };
+      messagesCache[row.key] = {
+        en: normalizeStoredMessage(row.message_en),
+        ar: normalizeStoredMessage(row.message_ar),
+      };
     }
     cacheTimestamp = Date.now();
   } catch (err) {
@@ -29,7 +64,6 @@ async function ensureCache() {
     await refreshCache();
   }
 }
-
 /**
  * Get a message template from DB or fallback.
  * Supports {name} style placeholders.
@@ -75,10 +109,10 @@ async function getMessage(key, lang = 'en', placeholders = {}) {
   
   // Replace placeholders
   for (const [k, v] of Object.entries(placeholders)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), formatPlaceholderValue(v));
   }
   
-  return text;
+  return sanitizeRenderedMessage(text);
 }
 
 /**
@@ -100,7 +134,7 @@ async function upsertMessage(key, message_en, message_ar) {
      ON CONFLICT (key)
      DO UPDATE SET message_en = $2, message_ar = $3, updated_at = NOW()
      RETURNING *`,
-    [key, message_en, message_ar || '']
+    [key, normalizeStoredMessage(message_en), normalizeStoredMessage(message_ar)]
   );
   // Invalidate cache
   cacheTimestamp = 0;

@@ -8,3 +8,5 @@ node_modules/
 uploads/
 sessions/
 *.bak
+backups/
+*.tgz

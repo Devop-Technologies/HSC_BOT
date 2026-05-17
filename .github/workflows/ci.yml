@@ -1,0 +1,46 @@
+name: HSC CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend syntax, smoke tests, audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --omit=dev
+
+  admin:
+    name: Admin lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+      # Full admin lint currently has pre-existing legacy errors outside this release scope.
+      # Keep this CI gate focused on changed Stage 10/admin-booking-message files plus the production build.
+      - run: npm run lint -- src/app/api/bookings/route.ts src/modules/bookings/BookingsPage.tsx src/modules/messages/MessagesPage.tsx src/types/bookings.ts
+      - run: npm run build

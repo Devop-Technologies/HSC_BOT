@@ -21,7 +21,7 @@ import {
 // ─── Constants ────────────────────────────────────────────────
 
 const PAGE_SIZE = 15;
-const LIST_HEADERS = ['Date & Time', 'Customer', 'Therapist', 'Service', 'Location', 'Status', 'Payment', ''];
+const LIST_HEADERS = ['Date & Time', 'Customer', 'Therapist', 'Service', 'Location', 'Signals', 'Status', 'Payment', ''];
 const STATUSES = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
 const PAYMENT_STATUSES = ['unpaid', 'paid', 'refunded'];
 
@@ -58,6 +58,60 @@ function StatusBadge({ value, map }: { value: string | null; map: Record<string,
       style={{ background: s.bg, color: s.text }}>
       {value.replace('_', ' ')}
     </span>
+  );
+}
+
+function SignalChip({ label, title, tone = 'muted' }: { label: string; title?: string; tone?: 'sent' | 'pending' | 'muted' }) {
+  const colors = tone === 'sent'
+    ? { bg: 'var(--color-status-confirmed-bg)', text: 'var(--color-status-confirmed-text)' }
+    : tone === 'pending'
+      ? { bg: 'var(--color-status-pending-bg)', text: 'var(--color-status-pending-text)' }
+      : { bg: 'var(--color-input-bg)', text: 'var(--color-text-muted)' };
+
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap"
+      style={{ background: colors.bg, color: colors.text }}
+      title={title}
+    >
+      {label}
+    </span>
+  );
+}
+
+function ReminderSignals({ booking }: { booking: Booking }) {
+  const providerTitle = booking.provider_reminder_20m_sent_at
+    ? `Provider reminder sent: ${booking.provider_reminder_20m_sent_at}`
+    : booking.therapist_id
+      ? 'Provider reminder not marked sent yet'
+      : 'No provider assigned';
+  const driverTitle = booking.driver_reminder_20m_sent_at
+    ? `Driver reminder sent: ${booking.driver_reminder_20m_sent_at}`
+    : booking.driver_id
+      ? `Driver reminder not marked sent yet${booking.driver_name ? ` for ${booking.driver_name}` : ''}`
+      : 'No driver assignment found for this provider/date';
+  const doorTitle = booking.door_image_message_id
+    ? `Door photo message id captured${booking.door_image_match_source ? ` via ${booking.door_image_match_source}` : ''}: ${booking.door_image_message_id}`
+    : 'No door photo message-id artifact found';
+
+  return (
+    <div className="flex flex-wrap gap-1.5 max-w-[210px]">
+      <SignalChip
+        label={booking.provider_reminder_20m_sent_at ? 'Provider sent' : booking.therapist_id ? 'Provider not sent' : 'No provider'}
+        title={providerTitle}
+        tone={booking.provider_reminder_20m_sent_at ? 'sent' : booking.therapist_id ? 'pending' : 'muted'}
+      />
+      <SignalChip
+        label={booking.driver_reminder_20m_sent_at ? 'Driver sent' : booking.driver_id ? 'Driver not sent' : 'No driver'}
+        title={driverTitle}
+        tone={booking.driver_reminder_20m_sent_at ? 'sent' : booking.driver_id ? 'pending' : 'muted'}
+      />
+      <SignalChip
+        label={booking.door_image_message_id ? 'Door photo saved' : 'No door photo'}
+        title={doorTitle}
+        tone={booking.door_image_message_id ? 'sent' : 'muted'}
+      />
+    </div>
   );
 }
 
@@ -424,6 +478,7 @@ function CalendarView({
                       </span>
                       <StatusBadge value={b.status} map={STATUS_STYLE} />
                       <StatusBadge value={b.payment_status} map={PAYMENT_STYLE} />
+                      <ReminderSignals booking={b} />
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -610,7 +665,7 @@ export default function BookingsPage() {
           className="flex items-center rounded-lg p-1 self-start sm:self-auto"
           style={{ background: 'var(--color-input-bg)', border: '1px solid var(--color-input-border)' }}
         >
-          {([['list', <List size={15} />, 'List'], ['calendar', <CalendarDays size={15} />, 'Calendar']] as const).map(([v, icon, label]) => (
+          {([['list', <List key="list-icon" size={15} />, 'List'], ['calendar', <CalendarDays key="calendar-icon" size={15} />, 'Calendar']] as const).map(([v, icon, label]) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -728,6 +783,7 @@ export default function BookingsPage() {
                 )}
               </Td>
 
+              <Td><ReminderSignals booking={b} /></Td>
               <Td><StatusBadge value={b.status} map={STATUS_STYLE} /></Td>
               <Td><StatusBadge value={b.payment_status} map={PAYMENT_STYLE} /></Td>
 
